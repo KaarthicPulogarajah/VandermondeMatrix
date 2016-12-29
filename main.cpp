@@ -1,31 +1,54 @@
 //Kaarthic Pulogarajah
+
+//cmath is for powers
 #include <cmath>
+//iostream is for cin and cout
 #include <iostream>
+//conio.h is for getch() at the end
 #include <conio.h>
+//iomanip is for setprecision() and setw()
 #include <iomanip>
 using namespace std;
 int main()
 {
-    //variable declaration and initialization
-    int row, col;
-    col = 4;
-    row = 8;
+     //variable declaration
+    int poly,row,col;
+    //prompt for order
+    cout << "Enter order of Polynomial: ";
+    cin >> poly;
+    //col must must used for the array size, not poly
+    col = poly+1;
+    cout << "Enter number of data points, min of " << col << ": ";
+    cin >> row;
+    // make sure user enter correct number of data points
+    while (row < col)
+    {
+        cout <<"Min of " << col << " points\n Enter number of points: ";
+        cin >> row;
+    }
+
     //declare v array
+    //array has row = num of data points, col = order + 1
     double v[row][col];
-    double Y[8];
+    //Y is the solution vector
+    // Y is 1d because it is only a column
+    double Y[row];
     //fill the first column with 1s
     for (int i = 0 ; i < row ; i++)
         v[i][0] = 1;
 
-    cout << "Enter x,y pairs for a 3rd order polynomial\n";
     //prompt user for all 8 coordinates and store in v array
     for (int i = 0 ; i < row ; i++)
     {
         cout << "Enter x coordinate "<< i+1 << "\n";
         cin >> v[i][1];
         // fill each column with corresponding powers
-        v[i][2] = pow(v[i][1], 2);
-        v[i][3] = pow(v[i][1], 3);
+        for (int z = 2 ; z <= poly ; z++)
+        {
+            v[i][z] = pow(v[i][1], z);
+
+        }
+        //store solution coordinates in Y array
         cout << "Enter y coordinate "<< i+1 << "\n";
         cin >> Y[i];
         cout << endl;
@@ -33,7 +56,10 @@ int main()
 
 
 
+
     //create transpose matrix
+
+    // transpose matrix has the size of v, but inverted col/row
     double vt[col][row];
     //switch the values of v from row to column
     for (int i = 0 ; i < col ; i++)
@@ -41,7 +67,10 @@ int main()
             vt[i][j] = v[j][i];
 
     //calculate vtv matrix by multiplying vt*v
+    //initialize vtv so that it is a square matrix
+    // must be a square, or inverse cannot be found
     double vtv [col][col];
+    //sum will be the value in vtv after matrix multiplication
     double sum = 0;
     for (int i = 0 ; i < col ; i++)
     {
@@ -54,6 +83,7 @@ int main()
                 sum += v[k][j]* vt[i][k];
             }
             vtv[i][j] = sum;
+            //make sum 0 so that each vtv value begins with 0
             sum = 0;
         }
     }
@@ -94,30 +124,36 @@ int main()
     }
 
     //find inverse
-    double work [4][8];
-    //set up augmented matrix
-    for (int i = 0 ; i < 4 ; i++)
-    {
-        //take in values from vtv matrix
-        for (int j = 0 ; j < 4 ; j++)
+    //large is necessary for the augmented matrix (col by 2*col)
+    int large = 2*col;
+    //work matrix is the large augmented matrix
+    //this matrix starts with the identity matrix on the right side
+
+    //fill left side of work with vtv
+    double work[col][large];
+    for (int i = 0 ; i < col ; i++)
+        for (int j = 0 ; j < col ; j++)
             work[i][j] = vtv[i][j];
-    }
-    for (int i = 0 ; i < 4 ; i++)
-    {
-        for (int j = 4 ; j < 8 ; j++)
+    //fill right side with identity matrix
+    for (int i = 0 ; i < col ; i++)
+        for (int j = col ; j < large ; j++)
         {
-            // fill right side with the identity matrix for a 4x4
-            if (j-i == 4)
+            if (j == i+col)
                 work[i][j] = 1;
             else
                 work[i][j] = 0;
         }
-    }
     //row operations, find inverse
     //using pivot method to find inverse
-    for (int k = 0 ; k <=3 ; k++)
+
+    //pivot method: divide top row to make top left 1
+        //multiply the 1 by any of the let column,
+        //goal is to make the left column 1, then all 0
+        //repeat for each column until identity matrix is reached
+
+    for (int k = 0 ; k < col ; k++)
     {
-        for (int j = k ; j < 8 ; j++)
+        for (int j = k ; j < large ; j++)
         {
             double n;
             //select coordinate that will become 1
@@ -127,9 +163,9 @@ int main()
             work[k][j] /= n;
         }
         //repeat for the number of columns in matrix
-        for (int i = 0 ; i <=3 ; i++)
+        for (int i = 0 ; i < col ; i++)
         {
-            for (int j = k ; j < 8 ; j++)
+            for (int j = k ; j < large ; j++)
             {
                 //condition to avoid accessing the same row containing the 1
                 if ( i != k)
@@ -142,30 +178,35 @@ int main()
                     work[k][j] *= n;
                     //subtract the rows to obtain a 0
                     work[i][j] -= work[k][j];
-                    //restore the row with the 1 to its orginal state so it can be reused
+                    //restore the row with the 1 to its orginal state to be reused
                     work[k][j] /= n;
                 }
 
             }
         }
     }
-    //initialize size of mtrix as same as vtv
+    //inverse is the right side of the work matrix
     double inverse[col][col];
+    int p = col;
     for (int i = 0 ; i < col ; i++)
-        for(int j = 4 ; j < row ; j++)
+    {
+        p=col;
+        for (int j = 0 ; j < col ; j++)
         {
-             //remove left hand 4x4 box from the work matrix
-            inverse[i][j-4] = work[i][j];
+            //remove left hand 4x4 box from the work matrix
+            inverse[i][j] = work[i][p];
+            p++;
         }
-
+    }
 
     //display inverse
     cout << endl << "This is (VtV)^-1\n";
     for (int i = 0 ; i < col ; i++){
         for (int j = 0 ;j < col ; j++)
-            cout << fixed << setprecision (2) << setw (12) << inverse[i][j];
+            cout << setw (9) << inverse[i][j];
     cout << endl;
     }
+
     //initalize (VtV)^-1 * Vt size
     double A [col][row];
     double sum2 = 0;
@@ -173,7 +214,7 @@ int main()
     {
         for (int j = 0 ; j < row ; j++)
         {
-            for (int m = 0 ; m < 4 ; m++)
+            for (int m = 0 ; m < col ; m++)
             {
                 //access appropriate row and columns to add
                 sum2 += inverse[i][m]*vt[m][j];
@@ -196,7 +237,7 @@ int main()
     double total = 0;
     for (int i = 0 ; i < col ; i++)
     {
-        for (int k = 0 ; k < 8 ; k++)
+        for (int k = 0 ; k < row ; k++)
         {
             //multiply corresponding row and column elements to get sum
             total += A[i][k]*Y[k];
@@ -210,10 +251,17 @@ int main()
             cout << fixed << setprecision (2) << solution[i];
     cout << endl;
     }
-
-    cout << "\nf(x) = (" << solution[3] << ")x^3 + (" << solution[2] << ")x^2";
-    cout << " + (" << solution[1] << ")x + (" << solution[0] << ")";
+    //display the function in one line
+    cout << "\nf(x) = ";
+    for (int i = poly ; i > 1 ; i--)
+    {
+        //disply each coefficient with the correct power
+            cout << "(" << solution[i] << ")x^" << i << " + ";
+    }
+    //display the last coefficient and the constant term
+    cout << "(" << solution[1] << ")x + (" << solution[0] << ")";
     cout << "\n*All values rounded to 2 decimal places";
+
     getch();
     return 0;
 }

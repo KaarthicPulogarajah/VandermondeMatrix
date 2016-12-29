@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1441407890 source:c:\users\kaarthic\desktop\my stuff\c++ programs\vanderbonus\main.cpp
+	<cmath>
+	<iostream>
+	<conio.h>
+	<iomanip>
+
